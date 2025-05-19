@@ -16,12 +16,12 @@ import Typo from "@/components/Typo";
 const welcome = () => {
   const router = useRouter();
   function handleClick() {
-    router.push("/login_register");
+    router.push("/login");
   }
   return (
     <View>
       <StatusBar animated={true} backgroundColor={colour.primary_background} />
-      <Typo size={34} children="Welcome" fontWeight="800" textProps={{}} styles={{}} color={textColour.primary}/>
+      <Typo size={34} fontWeight="800" textProps={{}} styles={{}} color={textColour.primary}>Welcome</Typo>
       <Button onPress={handleClick} title="LOGIN/REGISTER" color={buttonColour.primary} />
     </View>
   );

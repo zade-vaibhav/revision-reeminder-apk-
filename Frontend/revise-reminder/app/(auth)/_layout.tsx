@@ -11,8 +11,12 @@ export default function RootLayout() {
         options={{ title: "welcome", headerShown: false }}
       />
       <Stack.Screen
-        name="login_register"
-        options={{ title: "Login/Register", headerShown: false }}
+        name="login"
+        options={{ title: "Login", headerShown: false }}
+      />
+      <Stack.Screen
+        name="register"
+        options={{ title: "Register", headerShown: false }}
       />
     </Stack>
   );
