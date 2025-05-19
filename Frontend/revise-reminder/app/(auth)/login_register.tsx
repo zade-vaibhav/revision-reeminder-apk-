@@ -11,6 +11,8 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { buttonColour, colour, textColour } from "@/constants/theme";
 import Button from "@/constants/elements/Button";
+import Navbar from "@/constants/elements/Navigation";
+import { router } from "expo-router";
 
 const LoginRegister = () => {
   const [email, setEmail] = useState("");
@@ -37,10 +39,12 @@ const LoginRegister = () => {
   //handle login/register
   async function handleAuthrized() {
     console.log("clicked");
+    router.push("/(home)/home")
   }
 
   return (
     <SafeAreaProvider>
+      <Navbar title="Login/Register" showBack = {true}/>
       <SafeAreaView style={styles.container}>
         <TextInput
           style={styles.input}
@@ -58,7 +62,7 @@ const LoginRegister = () => {
           secureTextEntry
         />
         <Button
-          label="login/register"
+          label="Send"
           onPress={() => handleAuthrized()}
           containerStyle={{ backgroundColor: buttonColour.primary }}
           textStyle={{ text: textColour.primary }}

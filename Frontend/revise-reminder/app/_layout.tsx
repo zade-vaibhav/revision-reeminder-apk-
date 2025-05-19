@@ -13,6 +13,7 @@ export default function RootLayout() {
         options={{ title: "Home", headerShown: false }}
       />
       <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(home)" />
     </Stack>
   );
 }

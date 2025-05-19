@@ -8,7 +8,10 @@ import {
 } from "react-native";
 import React, { useEffect } from "react";
 import { useRouter } from "expo-router";
-import { buttonColour, colour } from "@/constants/theme";
+import { buttonColour, colour, textColour } from "@/constants/theme";
+import Navbar from "@/constants/elements/Navigation";
+import { scale, verticalScale } from "@/utils/styling";
+import Typo from "@/components/Typo";
 
 const welcome = () => {
   const router = useRouter();
@@ -18,7 +21,7 @@ const welcome = () => {
   return (
     <View>
       <StatusBar animated={true} backgroundColor={colour.primary_background} />
-      <Text>welcome</Text>
+      <Typo size={34} children="Welcome" fontWeight="800" textProps={{}} styles={{}} color={textColour.primary}/>
       <Button onPress={handleClick} title="LOGIN/REGISTER" color={buttonColour.primary} />
     </View>
   );
