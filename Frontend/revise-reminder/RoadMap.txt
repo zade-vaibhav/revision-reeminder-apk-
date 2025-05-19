@@ -1,0 +1,30 @@
+🚀 Phase 1: Planning & Setup
+1. Define Features ----
+
+User Authentication (Email/Password via Firebase)
+
+Create/Edit/Delete Revision Reminders
+
+Notification for reminders
+
+Dashboard: Upcoming reminders
+
+Calendar or timeline view
+
+History of completed revisions
+
+Option to snooze/reschedule
+
+Settings page (e.g., change theme, log out)
+
+2. Choose Tech Stack ----
+
+Frontend: Expo (React Native)
+
+Backend: Firebase (Auth + Firestore DB + Notifications)
+
+Notifications: Expo Notifications
+
+Navigation: React Navigation
+
+State Management: Context API / Redux Toolkit (if app grows large)
