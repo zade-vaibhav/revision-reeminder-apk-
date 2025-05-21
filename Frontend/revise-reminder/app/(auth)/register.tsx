@@ -59,7 +59,7 @@ const Register = () => {
           if (registerResponse.ok) {
             console.log("register success:", data);
             await AsyncStorage.setItem("uid", data.token);
-            router.push("/(home)/home");
+            router.replace("/(home)/home");
           } else {
             setError(data.message);
             console.error("Login failed:", data.message);
@@ -130,7 +130,7 @@ const Register = () => {
         // Optionally save token here:
         await AsyncStorage.setItem("uid", data.token);
         // Navigate to home page
-        router.push("/(home)/home");
+        router.replace("/(home)/home");
       } else {
         setError(data.message);
         console.error("Registration failed:", data.message);

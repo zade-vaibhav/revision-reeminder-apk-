@@ -58,7 +58,7 @@ const Login = () => {
           if (registerResponse.ok) {
             console.log("login success:", data);
             await AsyncStorage.setItem("uid", data.token);
-            router.push("/(home)/home");
+            router.replace("/(home)/home");
           } else {
             setError(data.message);
             console.error("Login failed:", data.message);
@@ -130,7 +130,7 @@ const Login = () => {
         setLoading(false);
         await AsyncStorage.setItem("uid", data.token);
         console.log("Login success:", data);
-        router.push("/(home)/home");
+        router.replace("/(home)/home");
       } else {
         setLoading(false);
         setError(data.message);
@@ -141,7 +141,7 @@ const Login = () => {
         );
       }
     } catch (error) {
-      setError(error)
+      setError(error);
       console.error("Error during login:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
