@@ -7,10 +7,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { buttonColour, textColour } from "@/constants/theme";
+import { buttonColour, colour, textColour } from "@/constants/theme";
 import Button from "@/constants/elements/Button";
 import { router } from "expo-router";
 import Typo from "@/components/Typo";
@@ -25,6 +27,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId:
@@ -109,6 +112,7 @@ const Register = () => {
   }, [email, name]);
 
   const handleAuthorized = async () => {
+    setLoading(true);
     try {
       const response = await fetch(
         "https://revision-reeminder.onrender.com/api/auth/register",
@@ -120,9 +124,7 @@ const Register = () => {
           body: JSON.stringify({ username: name, email, password }),
         }
       );
-
       const data = await response.json();
-
       if (response.ok) {
         console.log("Registration success:", data);
         // Optionally save token here:
@@ -135,8 +137,11 @@ const Register = () => {
         Alert.alert("Registration Failed", data.message || "Please try again.");
       }
     } catch (error) {
+      setError(error);
       console.error("Error during registration:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -210,27 +215,46 @@ const Register = () => {
             </View>
           )}
 
-          <Button
-            label="Register"
-            onPress={handleAuthorized}
-            containerStyle={styles.button}
-            textStyle={{ color: "#fff" }}
-            disabled={!email || !password || !name}
-          />
-          <Pressable
-            onPress={() => promptAsync()}
-            // disabled={!request
-            style={styles.googleButton}
-          >
-            <Typo
-              size={18}
-              fontWeight="300"
-              styles={styles.headerText}
-              color={textColour.secondary}
+          {loading ? (
+            <Button
+              label={<ActivityIndicator size="small" color="#fff" />}
+              onPress={() => {}}
+              containerStyle={styles.button}
+              textStyle={{ color: colour.primary_text, fontWeight: "700" }}
+            />
+          ) : (
+            <Button
+              label="Register"
+              onPress={handleAuthorized}
+              containerStyle={styles.button}
+              textStyle={{ color: "#fff" }}
+              disabled={!email || !password || !name}
+            />
+          )}
+          <View style={styles.googlebuttonContainer}>
+            <Pressable
+              onPress={() => promptAsync()}
+              style={styles.googleButton}
             >
-              Sign in with Google
-            </Typo>
-          </Pressable>
+              <View style={styles.iconWrapper}>
+                <Image
+                  source={{
+                    uri: "https://image.similarpng.com/file/similarpng/original-picture/2020/06/Logo-google-icon-PNG.png",
+                  }}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              </View>
+              <Typo
+                size={12}
+                fontWeight="400"
+                styles={styles.googleText}
+                color={textColour.secondary}
+              >
+                Sign Up with Google
+              </Typo>
+            </Pressable>
+          </View>
 
           <View style={styles.footerContainer}>
             <Typo
@@ -292,7 +316,7 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 4,
+    marginBottom: 8,
   },
   icon: {
     marginRight: 4,
@@ -307,13 +331,37 @@ const styles = StyleSheet.create({
   footerContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 16,
+  },
+  googlebuttonContainer: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   googleButton: {
-    backgroundColor: "#4285F4",
-    paddingVertical: 12,
-    borderRadius: 8,
+    maxWidth: 500,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    elevation: 2, // Android shadow
+    shadowColor: "#000", // iOS shadow
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  iconWrapper: {
+    marginRight: 12,
+  },
+  googleText: {
+    // You can customize font family or weight here if needed
+  },
+  image: {
+    height: 30,
+    width: 30,
   },
 });

@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StatusBar,
   StyleSheet,
   View,
   Image,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { buttonColour, colour, textColour } from "@/constants/theme";
@@ -12,39 +13,64 @@ import Button from "@/constants/elements/Button";
 import Typo from "@/components/Typo";
 
 const Welcome = () => {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   function handleClick() {
     router.push("/login");
   }
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar animated backgroundColor={colour.primary_background} barStyle="dark-content" />
+      <StatusBar
+        animated
+        backgroundColor={colour.primary_background}
+        barStyle="light-content"
+      />
 
       <View style={styles.content}>
-      <Image
-          source={{ uri: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80" }}
+        <Image
+          source={{
+            uri: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80",
+          }}
           style={styles.image}
           resizeMode="contain"
         />
       </View>
 
       <View style={styles.buttonContainer}>
-      <Typo
+        <Typo
           size={16}
           fontWeight="400"
           styles={styles.subtitle}
           color={textColour.secondary}
         >
-          Your personalized revision reminder app to stay organized and on track!
+          Your personalized revision reminder app to stay organized and on
+          track!
         </Typo>
-        <Button
-          label="Login / Register"
-          onPress={handleClick}
-          containerStyle={styles.button}
-          textStyle={{ color: "#fff", fontWeight: "700" }}
-        />
+        <Typo
+          size={12}
+          fontWeight="200"
+          styles={styles.subtitle}
+          color={textColour.secondary}
+        >
+          Your personalized revision reminder app to stay organized and on
+          track!
+        </Typo>
+        {loading ? (
+          <Button
+            label={<ActivityIndicator size="small" color="#fff" />}
+            onPress={() => {}}
+            containerStyle={styles.button}
+            textStyle={{ color: colour.primary_text, fontWeight: "700" }}
+          />
+        ) : (
+          <Button
+            label="Welcome"
+            onPress={handleClick}
+            containerStyle={styles.button}
+            textStyle={{ color: colour.primary_text, fontWeight: "700" }}
+          />
+        )}
       </View>
     </SafeAreaView>
   );

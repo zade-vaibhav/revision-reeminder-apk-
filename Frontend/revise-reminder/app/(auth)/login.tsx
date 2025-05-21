@@ -7,16 +7,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { buttonColour, textColour } from "@/constants/theme";
+import { buttonColour, colour, textColour } from "@/constants/theme";
 import Button from "@/constants/elements/Button";
 import { router } from "expo-router";
 import Typo from "@/components/Typo";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 
 WebBrowser.maybeCompleteAuthSession(); // required for Expo
 
@@ -24,6 +26,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId:
@@ -62,6 +65,7 @@ const Login = () => {
             Alert.alert("Login Failed", data.message || "Please try again.");
           }
         } catch (error) {
+          setError(error);
           console.error("Error during login:", error);
           Alert.alert("Error", "Something went wrong. Please try again.");
         }
@@ -107,6 +111,7 @@ const Login = () => {
   }, [email, password]);
 
   const handleAuthorized = async () => {
+    setLoading(true);
     try {
       const response = await fetch(
         "https://revision-reeminder.onrender.com/api/auth/login",
@@ -122,10 +127,12 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
+        setLoading(false);
         await AsyncStorage.setItem("uid", data.token);
         console.log("Login success:", data);
         router.push("/(home)/home");
       } else {
+        setLoading(false);
         setError(data.message);
         console.error("Login failed:", data.message);
         Alert.alert(
@@ -134,8 +141,11 @@ const Login = () => {
         );
       }
     } catch (error) {
+      setError(error)
       console.error("Error during login:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -191,7 +201,7 @@ const Login = () => {
                 style={styles.icon}
               />
               <Typo
-                size={8}
+                size={10}
                 fontWeight="400"
                 textProps={{}}
                 styles={{}}
@@ -201,27 +211,46 @@ const Login = () => {
               </Typo>
             </View>
           )}
-          <Button
-            label="Login"
-            onPress={handleAuthorized}
-            containerStyle={styles.button}
-            textStyle={{ color: "#fff" }}
-            disabled={!email || !password}
-          />
-          <Pressable
-            onPress={() => promptAsync()}
-            // disabled={!request
-            style={styles.googleButton}
-          >
-            <Typo
-              size={18}
-              fontWeight="300"
-              styles={styles.headerText}
-              color={textColour.secondary}
+          {loading ? (
+            <Button
+              label={<ActivityIndicator size="small" color="#fff" />}
+              onPress={() => {}}
+              containerStyle={styles.button}
+              textStyle={{ color: colour.primary_text, fontWeight: "700" }}
+            />
+          ) : (
+            <Button
+              label="Login"
+              onPress={handleAuthorized}
+              containerStyle={styles.button}
+              textStyle={{ color: "#fff" }}
+              disabled={!email || !password}
+            />
+          )}
+          <View style={styles.googlebuttonContainer}>
+            <Pressable
+              onPress={() => promptAsync()}
+              style={styles.googleButton}
             >
-              Sign in with Google
-            </Typo>
-          </Pressable>
+              <View style={styles.iconWrapper}>
+                <Image
+                  source={{
+                    uri: "https://image.similarpng.com/file/similarpng/original-picture/2020/06/Logo-google-icon-PNG.png",
+                  }}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              </View>
+              <Typo
+                size={12}
+                fontWeight="400"
+                styles={styles.googleText}
+                color={textColour.secondary}
+              >
+                Sign in with Google
+              </Typo>
+            </Pressable>
+          </View>
 
           <View style={styles.footerContainer}>
             <Typo
@@ -283,7 +312,7 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 4,
+    marginBottom: 8,
   },
   icon: {
     marginRight: 4,
@@ -298,13 +327,37 @@ const styles = StyleSheet.create({
   footerContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 16,
+  },
+  googlebuttonContainer: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   googleButton: {
-    backgroundColor: "#4285F4",
-    paddingVertical: 12,
-    borderRadius: 8,
+    maxWidth: 500,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    elevation: 2, // Android shadow
+    shadowColor: "#000", // iOS shadow
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  iconWrapper: {
+    marginRight: 12,
+  },
+  googleText: {
+    // You can customize font family or weight here if needed
+  },
+  image: {
+    height: 30,
+    width: 30,
   },
 });

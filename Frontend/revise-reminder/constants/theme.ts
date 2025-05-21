@@ -1,6 +1,7 @@
 export const colour = {
   primary_background: "#25292e",
   primary_text: "#fff",
+  secondary_text: "#000",
 };
 
 export const buttonColour = {
