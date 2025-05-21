@@ -13,11 +13,49 @@ import { buttonColour, textColour } from "@/constants/theme";
 import Button from "@/constants/elements/Button";
 import { router } from "expo-router";
 import Typo from "@/components/Typo";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+
+WebBrowser.maybeCompleteAuthSession(); // required for Expo
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId:
+      "1083520038454-mhfvi03frd3hgfbjhrc1ruaqvjk380b4.apps.googleusercontent.com",
+    webClientId:
+      "1083520038454-slq34bl29ale5oiqc05t7t9ko9tivau4.apps.googleusercontent.com",
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { authentication } = response;
+      console.log(authentication, " hello");
+      // Exchange token or get user info
+      const registerResponse = fetch("https://www.googleapis.com/userinfo/v2/me", {
+        headers: { Authorization: `Bearer ${authentication.accessToken}` },
+      })
+        .then((res) => res.json())
+        .then(async (user) => {
+          console.log("Google user:", user);
+
+          const userData = {
+            name: user.name,
+            email: user.email,
+            googleId: user.id,
+          };
+
+          // Store locally
+          await AsyncStorage.setItem("user", JSON.stringify(userData));
+
+          // Navigate to home
+          router.push("/(home)/home");
+        });
+    }
+  }, [response]);
 
   // Load saved data from AsyncStorage
   useEffect(() => {
@@ -62,7 +100,7 @@ const Register = () => {
     const response = await fetch(
       "https://revision-reeminder.onrender.com/api/auth/register",
       {
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ username: name, email, password }),
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,15 +118,26 @@ const Register = () => {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.inner}
         >
-          <Typo
-            size={20}
-            textProps={{}}
-            fontWeight="600"
-            styles={styles.headerText}
-            color={textColour.primary}
-          >
-            Create Account ✨
-          </Typo>
+          <View style={styles.headderContainer}>
+            <Typo
+              size={20}
+              fontWeight="600"
+              styles={styles.headerText}
+              color={textColour.primary}
+            >
+              Create Account ✨
+            </Typo>
+
+            <Typo
+              size={16}
+              fontWeight="300"
+              styles={styles.headerText}
+              color={textColour.secondary}
+            >
+              Sign up to get started with your personalized revision reminders
+              and stay on track with your learning goals.
+            </Typo>
+          </View>
 
           <TextInput
             style={styles.input}
@@ -120,6 +169,20 @@ const Register = () => {
             textStyle={{ color: "#fff" }}
             disabled={!email || !password || !name}
           />
+          <Pressable
+            onPress={() => promptAsync()}
+            // disabled={!request
+            style={styles.googleButton}
+          >
+            <Typo
+              size={18}
+              fontWeight="300"
+              styles={styles.headerText}
+              color={textColour.secondary}
+            >
+              Sign in with Google
+            </Typo>
+          </Pressable>
 
           <View style={styles.footerContainer}>
             <Typo
@@ -156,6 +219,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9FAFB",
   },
+  headderContainer: {
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
   inner: {
     flex: 1,
     justifyContent: "center",
@@ -163,7 +230,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     marginBottom: 24,
-    textAlign: "center",
+    textAlign: "left",
   },
   input: {
     height: 50,
@@ -185,5 +252,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 8,
+  },
+  googleButton: {
+    backgroundColor: "#4285F4",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
   },
 });

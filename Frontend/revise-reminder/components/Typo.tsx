@@ -5,7 +5,7 @@ import { colour, textColour } from '@/constants/theme'
 import { typoProps } from '@/types'
 
 const Typo = ({
-    size,color=textColour.primary,fontWeight="400",children,styles,textProps
+    size,color=textColour.primary,fontWeight="400",children,styles,textProps={}
 }:typoProps) => {
    const textStyle = {
     fontSize:size?verticalScale(size):verticalScale(18),
