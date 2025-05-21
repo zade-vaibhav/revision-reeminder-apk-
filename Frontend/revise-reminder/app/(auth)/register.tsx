@@ -31,31 +31,40 @@ const Register = () => {
   });
 
   useEffect(() => {
-    if (response?.type === "success") {
-      const { authentication } = response;
-      console.log(authentication, " hello");
-      // Exchange token or get user info
-      const registerResponse = fetch("https://www.googleapis.com/userinfo/v2/me", {
-        headers: { Authorization: `Bearer ${authentication.accessToken}` },
-      })
-        .then((res) => res.json())
-        .then(async (user) => {
-          console.log("Google user:", user);
-
-          const userData = {
-            name: user.name,
-            email: user.email,
-            googleId: user.id,
-          };
-
-          // Store locally
-          await AsyncStorage.setItem("user", JSON.stringify(userData));
-
-          // Navigate to home
-          router.push("/(home)/home");
-        });
-    }
+    const handleGoogleRegister = async () => {
+      if (response?.type === "success") {
+        const { authentication } = response;
+        console.log(authentication, " hello");
+  
+        try {
+          const registerResponse = await fetch(
+            "https://revision-reeminder.onrender.com/api/auth/googleRegister",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ accessToken: authentication.accessToken }),
+            }
+          );
+  
+          const data = await registerResponse.json();
+  
+          if (registerResponse.ok) {
+            console.log("Register success:", data);
+            // store token, navigate, etc
+          } else {
+            console.error("Register failed:", data.message);
+          }
+        } catch (error) {
+          console.error("Error during register:", error);
+        }
+      }
+    };
+  
+    handleGoogleRegister();
   }, [response]);
+  
 
   // Load saved data from AsyncStorage
   useEffect(() => {

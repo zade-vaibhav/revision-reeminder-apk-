@@ -131,6 +131,7 @@ exports.googleLogin = async (req, res) => {
       user = await User.create({
         username: profile.name,
         email: profile.email,
+        email_verified:profile.email_verified,
         authProvider: "google",
         password: accessToken, // placeholder; not used for login
       });
@@ -193,6 +194,7 @@ exports.googleRegister = async (req, res) => {
     user = await User.create({
       username: profile.name,
       email: profile.email,
+      email_verified:profile.email_verified,
       password: accessToken, // placeholder, not used for login
       authProvider: "google",
     });
