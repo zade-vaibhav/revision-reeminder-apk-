@@ -210,3 +210,21 @@ exports.googleRegister = async (req, res) => {
     res.status(401).json({ message: "Invalid Google token" });
   }
 };
+
+exports.autoLogin = async (req,res)=>{
+  try{
+    let user = await User.findOne({ email: req.user.email });
+    if(!user){
+      return res.status(404).json({ message: "User not found!" });
+    }
+    const token = generateToken(user._id);
+    res.status(200).json({
+      token,
+      user: { email: user.email, username: user.username, authProvider: user.authProvider },
+    });
+
+  }catch(error){
+    console.error("auto login error:", error);
+    res.status(401).json({ message: "Invalid User token" });
+  }
+}

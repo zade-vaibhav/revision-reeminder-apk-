@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StatusBar,
   StyleSheet,
@@ -11,10 +11,35 @@ import { useRouter } from "expo-router";
 import { buttonColour, colour, textColour } from "@/constants/theme";
 import Button from "@/constants/elements/Button";
 import Typo from "@/components/Typo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Welcome = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(()=>{
+    async function autologin(){
+      setLoading(true)
+      const token = await AsyncStorage.getItem("uid")
+      if(!token){
+        setLoading(false)
+        return 
+      }
+      const response = await fetch("https://revision-reeminder.onrender.com/api/auth/autologin", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json()
+      if(response.ok){
+        setLoading(false)
+        await AsyncStorage.setItem("uid", data.token);
+            router.push("/(home)/home");
+      }
+    }
+
+    autologin()
+  },[])
 
   function handleClick() {
     router.push("/login");
