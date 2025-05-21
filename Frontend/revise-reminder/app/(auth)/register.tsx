@@ -6,6 +6,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,6 +16,7 @@ import { router } from "expo-router";
 import Typo from "@/components/Typo";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
+import { MaterialIcons } from "@expo/vector-icons";
 
 WebBrowser.maybeCompleteAuthSession(); // required for Expo
 
@@ -22,6 +24,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId:
@@ -35,7 +38,7 @@ const Register = () => {
       if (response?.type === "success") {
         const { authentication } = response;
         console.log(authentication, " hello");
-  
+
         try {
           const registerResponse = await fetch(
             "https://revision-reeminder.onrender.com/api/auth/googleRegister",
@@ -47,24 +50,27 @@ const Register = () => {
               body: JSON.stringify({ accessToken: authentication.accessToken }),
             }
           );
-  
+
           const data = await registerResponse.json();
-  
+
           if (registerResponse.ok) {
-            console.log("Register success:", data);
-            // store token, navigate, etc
+            console.log("register success:", data);
+            await AsyncStorage.setItem("uid", data.token);
+            router.push("/(home)/home");
           } else {
-            console.error("Register failed:", data.message);
+            setError(data.message);
+            console.error("Login failed:", data.message);
+            Alert.alert("Login Failed", data.message || "Please try again.");
           }
         } catch (error) {
-          console.error("Error during register:", error);
+          console.error("Error during login:", error);
+          Alert.alert("Error", "Something went wrong. Please try again.");
         }
       }
     };
-  
+
     handleGoogleRegister();
   }, [response]);
-  
 
   // Load saved data from AsyncStorage
   useEffect(() => {
@@ -103,21 +109,35 @@ const Register = () => {
   }, [email, name]);
 
   const handleAuthorized = async () => {
-    console.log("clicked");
-    // router.push("/(home)/home");
+    try {
+      const response = await fetch(
+        "https://revision-reeminder.onrender.com/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username: name, email, password }),
+        }
+      );
 
-    const response = await fetch(
-      "https://revision-reeminder.onrender.com/api/auth/register",
-      {
-        body: JSON.stringify({ username: name, email, password }),
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Registration success:", data);
+        // Optionally save token here:
+        await AsyncStorage.setItem("uid", data.token);
+        // Navigate to home page
+        router.push("/(home)/home");
+      } else {
+        setError(data.message);
+        console.error("Registration failed:", data.message);
+        Alert.alert("Registration Failed", data.message || "Please try again.");
       }
-    );
-    const data = await response.json();
-    console.log(data);
+    } catch (error) {
+      console.error("Error during registration:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -170,6 +190,25 @@ const Register = () => {
             placeholder="Password"
             secureTextEntry
           />
+          {error && (
+            <View style={styles.errorContainer}>
+              <MaterialIcons
+                name="warning"
+                size={14}
+                color={textColour.danger}
+                style={styles.icon}
+              />
+              <Typo
+                size={8}
+                fontWeight="400"
+                textProps={{}}
+                styles={{}}
+                color={textColour.danger}
+              >
+                {error}
+              </Typo>
+            </View>
+          )}
 
           <Button
             label="Register"
@@ -249,6 +288,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
     backgroundColor: "#fff",
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  icon: {
+    marginRight: 4,
   },
   button: {
     backgroundColor: buttonColour.primary,

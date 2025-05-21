@@ -6,6 +6,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,12 +16,14 @@ import { router } from "expo-router";
 import Typo from "@/components/Typo";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
+import { MaterialIcons } from "@expo/vector-icons";
 
 WebBrowser.maybeCompleteAuthSession(); // required for Expo
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId:
@@ -30,30 +33,42 @@ const Login = () => {
   });
 
   useEffect(() => {
-    if (response?.type === "success") {
-      const { authentication } = response;
-      console.log(authentication, " hello");
-      // Exchange token or get user info
-      fetch("https://www.googleapis.com/userinfo/v2/me", {
-        headers: { Authorization: `Bearer ${authentication.accessToken}` },
-      })
-        .then((res) => res.json())
-        .then(async (user) => {
-          console.log("Google user:", user);
+    const handleGoogleRegister = async () => {
+      if (response?.type === "success") {
+        const { authentication } = response;
+        console.log(authentication, " hello");
 
-          const userData = {
-            name: user.name,
-            email: user.email,
-            googleId: user.id,
-          };
+        try {
+          const registerResponse = await fetch(
+            "https://revision-reeminder.onrender.com/api/auth/googleLogin",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ accessToken: authentication.accessToken }),
+            }
+          );
 
-          // Store locally
-          await AsyncStorage.setItem("user", JSON.stringify(userData));
+          const data = await registerResponse.json();
 
-          // Navigate to home
-          router.push("/(home)/home");
-        });
-    }
+          if (registerResponse.ok) {
+            console.log("login success:", data);
+            await AsyncStorage.setItem("uid", data.token);
+            router.push("/(home)/home");
+          } else {
+            setError(data.message);
+            console.error("Login failed:", data.message);
+            Alert.alert("Login Failed", data.message || "Please try again.");
+          }
+        } catch (error) {
+          console.error("Error during login:", error);
+          Alert.alert("Error", "Something went wrong. Please try again.");
+        }
+      }
+    };
+
+    handleGoogleRegister();
   }, [response]);
 
   // Load saved credentials from AsyncStorage
@@ -92,20 +107,36 @@ const Login = () => {
   }, [email, password]);
 
   const handleAuthorized = async () => {
-    console.log("Login clicked");
-    const response = await fetch(
-      "https://revision-reeminder.onrender.com/api/auth/login",
-      {
-        body: JSON.stringify({ email, password }),
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    try {
+      const response = await fetch(
+        "https://revision-reeminder.onrender.com/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        await AsyncStorage.setItem("uid", data.token);
+        console.log("Login success:", data);
+        router.push("/(home)/home");
+      } else {
+        setError(data.message);
+        console.error("Login failed:", data.message);
+        Alert.alert(
+          "Login Failed",
+          data.message || "Please check your credentials."
+        );
       }
-    );
-    const data = await response.json();
-    await AsyncStorage.setItem("uid", data.token);
-    console.log(data);
+    } catch (error) {
+      console.error("Error during login:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -150,6 +181,26 @@ const Login = () => {
             placeholder="Password"
             secureTextEntry
           />
+
+          {error && (
+            <View style={styles.errorContainer}>
+              <MaterialIcons
+                name="warning"
+                size={14}
+                color={textColour.danger}
+                style={styles.icon}
+              />
+              <Typo
+                size={8}
+                fontWeight="400"
+                textProps={{}}
+                styles={{}}
+                color={textColour.danger}
+              >
+                {error}
+              </Typo>
+            </View>
+          )}
           <Button
             label="Login"
             onPress={handleAuthorized}
@@ -157,7 +208,7 @@ const Login = () => {
             textStyle={{ color: "#fff" }}
             disabled={!email || !password}
           />
-            <Pressable
+          <Pressable
             onPress={() => promptAsync()}
             // disabled={!request
             style={styles.googleButton}
@@ -228,6 +279,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
     backgroundColor: "#fff",
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  icon: {
+    marginRight: 4,
   },
   button: {
     backgroundColor: buttonColour.primary,
