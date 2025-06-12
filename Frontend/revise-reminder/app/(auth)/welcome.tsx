@@ -12,6 +12,7 @@ import { buttonColour, colour, textColour } from "@/constants/theme";
 import Button from "@/constants/elements/Button";
 import Typo from "@/components/Typo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Url } from "@/utils/baseUrls";
 
 const Welcome = () => {
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ const Welcome = () => {
           return;
         }
 
-        const response = await fetch("https://revision-reeminder.onrender.com/api/auth/autologin", {
+        const response = await fetch(`${Url}/api/auth/autologin`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

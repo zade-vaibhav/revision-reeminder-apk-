@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const reminderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   title: { type: String, required: true },
+  discription : {type: String},
   datetime: { type: Date, required: true },
   repeat: { type: String }, // e.g. "daily", "weekly"
   completed: { type: Boolean, default: false },

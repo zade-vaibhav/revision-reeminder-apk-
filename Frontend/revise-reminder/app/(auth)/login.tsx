@@ -19,6 +19,7 @@ import Typo from "@/components/Typo";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { Url } from "@/utils/baseUrls";
 
 WebBrowser.maybeCompleteAuthSession(); // required for Expo
 
@@ -43,7 +44,7 @@ const Login = () => {
 
         try {
           const registerResponse = await fetch(
-            "https://revision-reeminder.onrender.com/api/auth/googleLogin",
+            `${Url}/api/auth/googleLogin`,
             {
               method: "POST",
               headers: {
@@ -114,7 +115,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://revision-reeminder.onrender.com/api/auth/login",
+        `${Url}/api/auth/login`,
         {
           method: "POST",
           headers: {

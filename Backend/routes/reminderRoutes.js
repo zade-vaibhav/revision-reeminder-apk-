@@ -9,8 +9,8 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post('/', createReminder);
-router.get('/', getReminders);
+router.post('/',protect, createReminder);
+router.get('/', protect , getReminders);
 router.delete('/:id', deleteReminder);
 
 module.exports = router;
