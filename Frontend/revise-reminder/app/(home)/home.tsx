@@ -40,7 +40,7 @@ const handleAddTask = async () => {
       return;
     }
 
-    const response = await fetch("http://localhost:5000/api/reminders", {
+    const response = await fetch(`${Url}/api/reminders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +95,7 @@ const handleAddTask = async () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/api/reminders`, {
+      const response = await fetch(`${Url}/api/reminders`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
