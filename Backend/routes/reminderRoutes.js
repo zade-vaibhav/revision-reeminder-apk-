@@ -11,6 +11,6 @@ router.use(protect);
 
 router.post('/',protect, createReminder);
 router.get('/', protect , getReminders);
-router.delete('/:id', deleteReminder);
+router.delete('/:id',protect, deleteReminder);
 
 module.exports = router;

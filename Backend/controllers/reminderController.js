@@ -15,6 +15,17 @@ exports.getReminders = async (req, res) => {
 };
 
 exports.deleteReminder = async (req, res) => {
-  await Reminder.findByIdAndDelete(req.params.id);
-  res.status(204).end();
+  try {
+    const reminder = await Reminder.findByIdAndDelete(req.params.id);
+
+    if (!reminder) {
+      return res.status(404).json({ message: "Reminder not found" });
+    }
+
+    res.status(200).json({ message: "Reminder deleted successfully", reminder });
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({ message: "Server error while deleting reminder" });
+  }
 };
+

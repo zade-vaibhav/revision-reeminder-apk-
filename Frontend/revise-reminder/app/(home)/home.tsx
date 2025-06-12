@@ -14,7 +14,7 @@ import {
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { colour } from "@/constants/theme";
+import { colour, fontSize, textColour } from "@/constants/theme";
 import { Url } from "@/utils/baseUrls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -22,57 +22,59 @@ import { router } from "expo-router";
 const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [error,setError] = useState({createError:""})
+  const [error, setError] = useState({ createError: "" });
+  const [isEditing, setIsEditing] = useState(false)
   const [showMenuIndex, setShowMenuIndex] = useState(null);
   const [form, setForm] = useState({
     title: "",
-    discreption: "",
+    discription: "",
     date: new Date(),
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-const handleAddTask = async () => {
-  try {
-    const token = await AsyncStorage.getItem("uid");
+  const handleAddTask = async () => {
+    try {
+      const token = await AsyncStorage.getItem("uid");
 
-    if (!token) {
-      router.replace("/(auth)/login");
-      return;
+      if (!token) {
+        router.replace("/(auth)/login");
+        return;
+      }
+
+      const response = await fetch(`${Url}/api/reminders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: form.title,
+          datetime: form.date,
+          discription: form.discription, // consider fixing typo: "description"
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError({ createError: data.message });
+        return;
+      }
+
+      // Success
+      setForm({ title: "", date: new Date(), discription: "" });
+      getReminders();
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error adding reminder:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
     }
-
-    const response = await fetch(`${Url}/api/reminders`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: form.title,
-        datetime: form.date,
-        discription: form.discreption, // consider fixing typo: "description"
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError({createError:data.message})
-      return;
-    }
-
-    // Success
-    setForm({ title: "", date: new Date(), discreption: "" });
-    setShowModal(false);
-  } catch (error) {
-    console.error("Error adding reminder:", error);
-    Alert.alert("Error", "Something went wrong. Please try again.");
-  }
-};
-
+  };
 
   const handleCancelTask = () => {
     setForm({ title: "", date: new Date() });
-    setError({})
+    setError({});
+    setIsEditing(false)
     setShowModal(false);
   };
 
@@ -99,15 +101,15 @@ const handleAddTask = async () => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
-        }
+        },
       });
 
       const data = await response.json();
       if (response.ok) {
-        console.log(data)
-        setTasks(data)
+        console.log(data);
+        setTasks(data);
       } else {
-        Alert.alert(data.message)
+        Alert.alert(data.message);
       }
     } catch (error) {
       console.error("Error getting reminder :", error);
@@ -116,12 +118,91 @@ const handleAddTask = async () => {
   };
 
   useEffect(() => {
-   getReminders()
-  },[])
+    getReminders();
+  }, []);
 
-  const handleDelete = (id) => {
-    setTasks(tasks.filter((t) => t.id !== id));
-    setShowMenuIndex(null);
+  const handleDelete = async (id) => {
+  try {
+    const token = await AsyncStorage.getItem("uid");
+
+    if (!token) {
+      router.replace("/(auth)/login");
+      return;
+    }
+
+    const response = await fetch(`http://localhost:5000/api/reminders/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      Alert.alert("Error", data.message || "Failed to delete reminder.");
+      return;
+    }
+
+    // On success
+    getReminders(); // Refresh the list
+  } catch (error) {
+    console.error("Error deleting reminder:", error);
+    Alert.alert("Error", "Something went wrong. Please try again.");
+  }
+};
+
+
+  const handleEdit = (item) => {
+   setIsEditing(true)
+   setForm({
+          title: item.title,
+          date: new Date(item.datetime),
+          discription: item.discription,
+        })
+        setShowModal(true)
+
+  };
+
+  const handleUpdateTask = async () => {
+    return;
+    try {
+      const token = await AsyncStorage.getItem("uid");
+
+      if (!token) {
+        router.replace("/(auth)/login");
+        return;
+      }
+
+      const response = await fetch(`${Url}/api/reminders`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: form.title,
+          datetime: form.date,
+          discription: form.discription, // consider fixing typo: "description"
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError({ createError: data.message });
+        return;
+      }
+
+      // Success
+      setForm({ title: "", date: new Date(), discription: "" });
+      getReminders();
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error adding reminder:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -132,33 +213,42 @@ const handleAddTask = async () => {
         barStyle="light-content"
       />
       <FlatList
-  data={tasks}
-  keyExtractor={(item) => item.id}
-  renderItem={({ item, index }) => (
-    <View style={styles.taskItem}>
-      <Text style={styles.taskTitle}>{item.title}</Text>
-      <TouchableOpacity
-        onPress={() =>
-          setShowMenuIndex(showMenuIndex === index ? null : index)
-        }
-      >
-        <Entypo name="dots-three-vertical" size={18} color="black" />
-      </TouchableOpacity>
+        data={tasks}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <View style={styles.taskItem}>
+            <View style={styles.textContainer}>
+              <Text style={styles.taskTitle}>{item.title}</Text>
+              <Text
+                style={styles.taskDiscription}
+                numberOfLines={2} // or 1 for a single-line ellipsis
+                ellipsizeMode="tail"
+              >
+                {item.discription}
+              </Text>
+            </View>
 
-      {showMenuIndex === index && (
-        <View style={styles.menu}>
-          <TouchableOpacity>
-            <Text style={styles.menuText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleDelete(item.id)}>
-            <Text style={styles.menuText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  )}
-/>
+            <TouchableOpacity
+              onPress={() =>
+                setShowMenuIndex(showMenuIndex === index ? null : index)
+              }
+            >
+              <Entypo name="dots-three-vertical" size={18} color="black" />
+            </TouchableOpacity>
 
+            {showMenuIndex === index && (
+              <View style={styles.menu}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
+                  <Text style={styles.menuText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item._id)}>
+                  <Text style={styles.menuText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+      />
 
       {/* Floating Add Button */}
       <TouchableOpacity style={styles.fab} onPress={() => setShowModal(true)}>
@@ -181,8 +271,8 @@ const handleAddTask = async () => {
               style={styles.input}
               multiline={true}
               numberOfLines={5}
-              value={form.discreption}
-              onChangeText={(text) => setForm({ ...form, discreption: text })}
+              value={form.discription}
+              onChangeText={(text) => setForm({ ...form, discription: text })}
             />
 
             <TouchableOpacity
@@ -217,9 +307,11 @@ const handleAddTask = async () => {
               <Image source={{ uri: form.image }} style={styles.imagePreview} />
             )} */}
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleAddTask}>
+            {isEditing ?<TouchableOpacity style={styles.saveButton} onPress={handleUpdateTask}>
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>Update</Text>
+            </TouchableOpacity> : <TouchableOpacity style={styles.saveButton} onPress={handleAddTask}>
               <Text style={{ color: "#fff", fontWeight: "bold" }}>Save</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>}
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={handleCancelTask}
@@ -246,18 +338,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     marginBottom: 10,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colour.secondary_background,
     borderRadius: 10,
     position: "relative",
   },
+  textContainer: {
+    flexDirection: "column",
+  },
   taskTitle: {
-    fontSize: 16,
+    fontSize: fontSize.primary,
+    color: textColour.primary,
+  },
+  taskDiscription: {
+    fontSize: fontSize.base,
+    color: textColour.secondary,
   },
   menu: {
     position: "absolute",
     top: 40,
     right: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#",
     padding: 10,
     borderRadius: 6,
     elevation: 4,
@@ -271,7 +371,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 20,
     bottom: 30,
-    backgroundColor: "#007bff",
+    backgroundColor: colour.primary_background,
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -328,8 +428,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 6,
   },
-  errorText:{
-    color :"#FF0000",
-    padding:10,
-  }
+  errorText: {
+    color: "#FF0000",
+    padding: 10,
+  },
 });
