@@ -54,6 +54,11 @@ const Profile = () => {
     getUser();
   }, []);
 
+  async function handleLogOut(){
+    await AsyncStorage.removeItem("uid")
+    router.replace("/(auth)/login")
+  }
+
   return (
     <ScrollView style={styles.container}>
       {/* Top Section: Profile Info */}
@@ -92,14 +97,14 @@ const Profile = () => {
         <MenuItem icon="settings" label="Settings" />
         <MenuItem icon="info" label="About" />
         <MenuItem icon="help-circle" label="Help & Support" />
-        <MenuItem icon="log-out" label="Logout" color="red" />
+        <MenuItem icon="log-out" label="Logout" color="red" onPress={handleLogOut} />
       </View>
     </ScrollView>
   );
 };
 
-const MenuItem = ({ icon, label, color = "#000" }) => (
-  <TouchableOpacity style={styles.menuItem}>
+const MenuItem = ({ icon, label, color = "#000",onPress}) => (
+  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
     <Feather name={icon} size={20} color={color} />
     <Text style={[styles.menuLabel, { color }]}>{label}</Text>
   </TouchableOpacity>

@@ -141,16 +141,13 @@ const Home = () => {
         return;
       }
 
-      const response = await fetch(
-        `${Url}/api/reminders/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${Url}/api/reminders/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -191,21 +188,18 @@ const Home = () => {
         return;
       }
 
-      const response = await fetch(
-        `${Url}/api/reminders/${editingId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: form.title,
-            datetime: form.date,
-            discription: form.discription, // consider fixing typo: "description"
-          }),
-        }
-      );
+      const response = await fetch(`${Url}/api/reminders/${editingId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: form.title,
+          datetime: form.date,
+          discription: form.discription, // consider fixing typo: "description"
+        }),
+      });
 
       const data = await response.json();
 
@@ -245,15 +239,15 @@ const Home = () => {
             ]}
           >
             <View style={styles.textContainer}>
-              <Text style={styles.taskTitle}>{item.title}</Text>
-              <Text
-                style={styles.taskDiscription}
-                numberOfLines={2}
-                ellipsizeMode="tail"
-              >
-                {item.discription}
-              </Text>
-            </View>
+  <Text style={styles.taskTitle}>{item.title}</Text>
+  <Text
+    style={styles.taskDiscription}
+    numberOfLines={1}
+    ellipsizeMode="tail"
+  >
+    {item.discription}
+  </Text>
+</View>
 
             <TouchableOpacity
               onPress={() =>
@@ -287,7 +281,10 @@ const Home = () => {
                   style={styles.menuItem}
                 >
                   {isDeleting ? (
-                    <ActivityIndicator size="small" color={colour.primary_background} />
+                    <ActivityIndicator
+                      size="small"
+                      color={colour.primary_background}
+                    />
                   ) : (
                     <Text style={[styles.menuText, { color: "red" }]}>
                       🗑 Delete
@@ -416,8 +413,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   textContainer: {
-    flexDirection: "column",
-  },
+  flex: 1,
+  paddingRight: 8, // prevent text from overlapping menu
+},
   taskTitle: {
     fontSize: fontSize.primary,
     color: textColour.primary,
@@ -425,6 +423,7 @@ const styles = StyleSheet.create({
   taskDiscription: {
     fontSize: fontSize.base,
     color: textColour.secondary,
+    maxWidth: '100%', // prevents overflow
   },
   fab: {
     position: "absolute",
