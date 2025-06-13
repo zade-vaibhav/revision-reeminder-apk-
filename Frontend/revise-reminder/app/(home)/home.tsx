@@ -10,6 +10,8 @@ import {
   Image,
   StatusBar,
   Alert,
+  ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -23,7 +25,9 @@ const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState({ createError: "" });
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditionId] = useState();
+  const [isLoading, setIsLoading] = useState(false);
   const [showMenuIndex, setShowMenuIndex] = useState(null);
   const [form, setForm] = useState({
     title: "",
@@ -33,11 +37,13 @@ const Home = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleAddTask = async () => {
+    setIsLoading(true);
     try {
       const token = await AsyncStorage.getItem("uid");
 
       if (!token) {
         router.replace("/(auth)/login");
+        setIsLoading(false);
         return;
       }
 
@@ -68,14 +74,17 @@ const Home = () => {
     } catch (error) {
       console.error("Error adding reminder:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCancelTask = () => {
     setForm({ title: "", date: new Date() });
     setError({});
-    setIsEditing(false)
+    setIsEditing(false);
     setShowModal(false);
+    setShowMenuIndex(null)
   };
 
   // const pickImage = async () => {
@@ -106,7 +115,6 @@ const Home = () => {
 
       const data = await response.json();
       if (response.ok) {
-        console.log(data);
         setTasks(data);
       } else {
         Alert.alert(data.message);
@@ -122,86 +130,99 @@ const Home = () => {
   }, []);
 
   const handleDelete = async (id) => {
-  try {
-    const token = await AsyncStorage.getItem("uid");
-
-    if (!token) {
-      router.replace("/(auth)/login");
-      return;
-    }
-
-    const response = await fetch(`http://localhost:5000/api/reminders/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      Alert.alert("Error", data.message || "Failed to delete reminder.");
-      return;
-    }
-
-    // On success
-    getReminders(); // Refresh the list
-  } catch (error) {
-    console.error("Error deleting reminder:", error);
-    Alert.alert("Error", "Something went wrong. Please try again.");
-  }
-};
-
-
-  const handleEdit = (item) => {
-   setIsEditing(true)
-   setForm({
-          title: item.title,
-          date: new Date(item.datetime),
-          discription: item.discription,
-        })
-        setShowModal(true)
-
-  };
-
-  const handleUpdateTask = async () => {
-    return;
+    setIsLoading(true);
     try {
       const token = await AsyncStorage.getItem("uid");
 
       if (!token) {
         router.replace("/(auth)/login");
+        setIsLoading(false);
         return;
       }
 
-      const response = await fetch(`${Url}/api/reminders`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: form.title,
-          datetime: form.date,
-          discription: form.discription, // consider fixing typo: "description"
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/reminders/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError({ createError: data.message });
+        Alert.alert("Error", data.message || "Failed to delete reminder.");
         return;
       }
 
-      // Success
+      // On success
+      getReminders(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting reminder:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = (item) => {
+    setIsEditing(true);
+    setEditionId(item._id);
+    setForm({
+      title: item.title,
+      date: new Date(item.datetime),
+      discription: item.discription,
+    });
+    setShowModal(true);
+  };
+
+  const handleUpdateTask = async () => {
+    setIsLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("uid");
+      if (!token) {
+        router.replace("/(auth)/login");
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/reminders/${editingId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: form.title,
+            datetime: form.date,
+            discription: form.discription, // consider fixing typo: "description"
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert("Error", data.message || "Failed to edit reminder.");
+        setIsLoading(false);
+        return;
+      }
+
+      // On success
       setForm({ title: "", date: new Date(), discription: "" });
       getReminders();
       setShowModal(false);
+      setShowMenuIndex(null);
     } catch (error) {
-      console.error("Error adding reminder:", error);
+      console.error("Error editing reminder:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -212,16 +233,20 @@ const Home = () => {
         backgroundColor={colour.primary_background}
         barStyle="light-content"
       />
-      <FlatList
-        data={tasks}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <View style={styles.taskItem}>
+      <ScrollView>
+        {tasks.map((item, index) => (
+          <View
+            key={item._id || index}
+            style={[
+              styles.taskItem,
+              { zIndex: showMenuIndex === index ? 100 : 0 },
+            ]}
+          >
             <View style={styles.textContainer}>
               <Text style={styles.taskTitle}>{item.title}</Text>
               <Text
                 style={styles.taskDiscription}
-                numberOfLines={2} // or 1 for a single-line ellipsis
+                numberOfLines={2}
                 ellipsizeMode="tail"
               >
                 {item.discription}
@@ -238,17 +263,34 @@ const Home = () => {
 
             {showMenuIndex === index && (
               <View style={styles.menu}>
-                <TouchableOpacity onPress={() => handleEdit(item)}>
-                  <Text style={styles.menuText}>Edit</Text>
+                {/* ❌ Close Button */}
+                <TouchableOpacity
+                  onPress={() => setShowMenuIndex(null)}
+                  style={styles.closeButton}
+                >
+                  <Text style={{ fontSize: fontSize.base, fontWeight: "bold" }}>✖</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item._id)}>
-                  <Text style={styles.menuText}>Delete</Text>
+
+                {/* Menu Options */}
+                <TouchableOpacity
+                  onPress={() => handleEdit(item)}
+                  style={styles.menuItem}
+                >
+                  <Text style={styles.menuText}>✏️ Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDelete(item._id)}
+                  style={styles.menuItem}
+                >
+                  <Text style={[styles.menuText, { color: "red" }]}>
+                    🗑 Delete
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
 
       {/* Floating Add Button */}
       <TouchableOpacity style={styles.fab} onPress={() => setShowModal(true)}>
@@ -307,14 +349,37 @@ const Home = () => {
               <Image source={{ uri: form.image }} style={styles.imagePreview} />
             )} */}
 
-            {isEditing ?<TouchableOpacity style={styles.saveButton} onPress={handleUpdateTask}>
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>Update</Text>
-            </TouchableOpacity> : <TouchableOpacity style={styles.saveButton} onPress={handleAddTask}>
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>Save</Text>
-            </TouchableOpacity>}
+            {isEditing ? (
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleUpdateTask}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                    Update
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleAddTask}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                    Save
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={handleCancelTask}
+              disabled={isLoading}
             >
               <Text style={{ color: "#fff", fontWeight: "bold" }}>Cancel</Text>
             </TouchableOpacity>
@@ -353,20 +418,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     color: textColour.secondary,
   },
-  menu: {
-    position: "absolute",
-    top: 40,
-    right: 10,
-    backgroundColor: "#",
-    padding: 10,
-    borderRadius: 6,
-    elevation: 4,
-    zIndex: 99,
-  },
-  menuText: {
-    fontSize: 14,
-    paddingVertical: 4,
-  },
   fab: {
     position: "absolute",
     right: 20,
@@ -381,25 +432,25 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(23, 21, 21, 0.5)",
     justifyContent: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: colour.secondary_background,
     borderRadius: 10,
     padding: 20,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colour.light_grey,
     padding: 10,
     borderRadius: 6,
     marginBottom: 10,
   },
   dateButton: {
     padding: 10,
-    backgroundColor: "#e6e6e6",
+    backgroundColor: colour.border,
     borderRadius: 6,
     marginBottom: 10,
   },
@@ -416,20 +467,52 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   saveButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: textColour.success,
     padding: 12,
     alignItems: "center",
     borderRadius: 6,
     marginBottom: 5,
   },
   cancelButton: {
-    backgroundColor: "#FF0000",
+    backgroundColor: textColour.danger,
     padding: 12,
     alignItems: "center",
     borderRadius: 6,
   },
   errorText: {
-    color: "#FF0000",
+    color: textColour.danger,
     padding: 10,
+  },
+  menu: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#fff",
+    paddingVertical: 8,
+    borderRadius: 8,
+    elevation: 5, // for Android
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    zIndex: 10,
+    minWidth: 120,
+  },
+  menuItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colour.border,
+  },
+  menuText: {
+    fontSize: fontSize.base,
+    color: "#333",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 4,
+    right: 6,
+    zIndex: 1,
+    padding: 4,
   },
 });
