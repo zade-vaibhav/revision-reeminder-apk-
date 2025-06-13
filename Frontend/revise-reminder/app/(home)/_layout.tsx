@@ -8,28 +8,49 @@ const _layout = () => {
   return (
     <Tabs>
       <Tabs.Screen
-  name="home"
-  options={{
-    title: "Home",
-    tabBarLabelStyle: { fontSize: 12, color: '#fff' },
-    tabBarIcon: ({ color, size }) => (
-      <Ionicons name="home" size={size} color={color} />
-    ),
-    tabBarActiveTintColor: "#1E90FF",  // Active tab color
-    tabBarInactiveTintColor: "#888",   // Inactive tab color
-    tabBarStyle: {
-      backgroundColor: colour.primary_background,      // Tab bar background
-      borderTopWidth: 0,
-    },
-    headerStyle: {
-      backgroundColor: colour.primary_background,      // Header background
-    },
-    headerTitleStyle: {
-      color: colour.primary_text,                   // Header text color
-    },
-  }}
-/>
-
+        name="home"
+        options={{
+          title: "Home",
+          tabBarLabelStyle: { fontSize: 12, color: "#fff" },
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+          tabBarActiveTintColor: "#1E90FF", // Active tab color
+          tabBarInactiveTintColor: "#888", // Inactive tab color
+          tabBarStyle: {
+            backgroundColor: colour.primary_background, // Tab bar background
+            borderTopWidth: 0,
+          },
+          headerStyle: {
+            backgroundColor: colour.primary_background, // Header background
+          },
+          headerTitleStyle: {
+            color: colour.primary_text, // Header text color
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarLabelStyle: { fontSize: 12, color: "#fff" },
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
+          ),
+          tabBarActiveTintColor: "#1E90FF", // Active tab color
+          tabBarInactiveTintColor: "#888", // Inactive tab color
+          tabBarStyle: {
+            backgroundColor: colour.primary_background,
+            borderTopWidth: 0,
+          },
+          headerStyle: {
+            backgroundColor: colour.primary_background,
+          },
+          headerTitleStyle: {
+            color: colour.primary_text,
+          },
+        }}
+      />
     </Tabs>
   );
 };

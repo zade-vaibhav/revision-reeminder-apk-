@@ -27,6 +27,7 @@ const Home = () => {
   const [error, setError] = useState({ createError: "" });
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditionId] = useState();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showMenuIndex, setShowMenuIndex] = useState(null);
   const [form, setForm] = useState({
@@ -84,7 +85,7 @@ const Home = () => {
     setError({});
     setIsEditing(false);
     setShowModal(false);
-    setShowMenuIndex(null)
+    setShowMenuIndex(null);
   };
 
   // const pickImage = async () => {
@@ -130,13 +131,13 @@ const Home = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    setIsLoading(true);
+    setIsDeleting(true);
     try {
       const token = await AsyncStorage.getItem("uid");
 
       if (!token) {
         router.replace("/(auth)/login");
-        setIsLoading(false);
+        setIsDeleting(false);
         return;
       }
 
@@ -160,11 +161,12 @@ const Home = () => {
 
       // On success
       getReminders(); // Refresh the list
+      setShowMenuIndex(null);
     } catch (error) {
       console.error("Error deleting reminder:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsDeleting(false);
     }
   };
 
@@ -268,7 +270,9 @@ const Home = () => {
                   onPress={() => setShowMenuIndex(null)}
                   style={styles.closeButton}
                 >
-                  <Text style={{ fontSize: fontSize.base, fontWeight: "bold" }}>✖</Text>
+                  <Text style={{ fontSize: fontSize.base, fontWeight: "bold" }}>
+                    ✖
+                  </Text>
                 </TouchableOpacity>
 
                 {/* Menu Options */}
@@ -282,9 +286,13 @@ const Home = () => {
                   onPress={() => handleDelete(item._id)}
                   style={styles.menuItem}
                 >
-                  <Text style={[styles.menuText, { color: "red" }]}>
-                    🗑 Delete
-                  </Text>
+                  {isDeleting ? (
+                    <ActivityIndicator size="small" color={colour.primary_background} />
+                  ) : (
+                    <Text style={[styles.menuText, { color: "red" }]}>
+                      🗑 Delete
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             )}

@@ -36,7 +36,6 @@ export const colour = {
   transparent: "transparent",
 };
 
-
 export const buttonColour = {
   primary: "#007bff",
   secondary: "#6c757d",
@@ -66,4 +65,3 @@ export const fontSize = {
   display: 40,
   hero: 48,
 };
-
