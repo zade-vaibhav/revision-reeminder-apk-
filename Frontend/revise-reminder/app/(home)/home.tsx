@@ -142,7 +142,7 @@ const Home = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/reminders/${id}`,
+        `${Url}/api/reminders/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -192,7 +192,7 @@ const Home = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/reminders/${editingId}`,
+        `${Url}/api/reminders/${editingId}`,
         {
           method: "PUT",
           headers: {

@@ -11,6 +11,7 @@ import {
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Url } from "@/utils/baseUrls";
 
 const Profile = () => {
   const [user, setUser] = useState({});
@@ -26,7 +27,7 @@ const Profile = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/user`, {
+      const response = await fetch(`${Url}/api/user`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
